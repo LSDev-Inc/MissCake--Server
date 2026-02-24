@@ -20,7 +20,7 @@ const normalizeOrigin = (origin) => String(origin || "").trim().replace(/\/$/, "
 const allowedOrigins = new Set(
   [
     "https://miss-cake.vercel.app",
-    "http://localhost:5173",
+    ...(isProd ? [] : ["http://localhost:5173"]),
     process.env.CLIENT_URL,
   ]
     .filter(Boolean)
@@ -35,12 +35,7 @@ const corsOptions = {
 
     const normalizedOrigin = normalizeOrigin(origin);
     const allowed = allowedOrigins.has(normalizedOrigin);
-
-    if (isProd) {
-      return callback(allowed ? null : new Error("CORS not allowed"), allowed);
-    }
-
-    return callback(allowed ? null : new Error("CORS not allowed"), allowed);
+    return callback(null, allowed);
   },
   credentials: true,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
