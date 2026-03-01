@@ -1,10 +1,10 @@
 const express = require("express");
-const path = require("path");
 const helmet = require("helmet");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const rateLimit = require("express-rate-limit");
 const { notFound, errorHandler } = require("./middleware/errorMiddleware");
+const { uploadsDir } = require("./config/storage");
 
 const authRoutes = require("./routes/authRoutes");
 const productRoutes = require("./routes/productRoutes");
@@ -76,7 +76,7 @@ app.use(express.urlencoded({ extended: true, limit: "1mb" }));
 app.use(cookieParser());
 app.use(globalLimiter);
 
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use("/uploads", express.static(uploadsDir));
 
 app.get("/api/health", (req, res) => {
   res.status(200).json({ status: "ok" });

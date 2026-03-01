@@ -1,11 +1,11 @@
 const express = require("express");
 const fs = require("fs");
-const path = require("path");
 const multer = require("multer");
 const { protect, adminOrOwnerOnly } = require("../middleware/authMiddleware");
+const { uploadsDir } = require("../config/storage");
 
 const router = express.Router();
-const uploadDir = path.join(__dirname, "..", "uploads");
+const uploadDir = uploadsDir;
 
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
