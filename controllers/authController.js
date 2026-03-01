@@ -1,6 +1,6 @@
 const bcrypt = require("bcryptjs");
 const User = require("../models/User");
-const { generateToken, setAuthCookie } = require("../utils/generateToken");
+const { generateToken, setAuthCookie, clearAuthCookie } = require("../utils/generateToken");
 
 const sanitizeUser = (user) => ({
   _id: user._id,
@@ -43,7 +43,7 @@ const registerUser = async (req, res, next) => {
     });
 
     const token = generateToken(user._id, user.role);
-    setAuthCookie(res, token);
+    setAuthCookie(res, token, req);
 
     return res.status(201).json({
       message: "User registered successfully",
@@ -91,7 +91,7 @@ const loginUser = async (req, res, next) => {
     }
 
     const token = generateToken(user._id, user.role);
-    setAuthCookie(res, token);
+    setAuthCookie(res, token, req);
 
     return res.status(200).json({
       message: "Login successful",
@@ -103,15 +103,7 @@ const loginUser = async (req, res, next) => {
 };
 
 const logoutUser = async (req, res) => {
-  const isProd = process.env.NODE_ENV === "production";
-
-  res.cookie("token", "", {
-    httpOnly: true,
-    secure: isProd,
-    sameSite: isProd ? "none" : "lax",
-    path: "/",
-    expires: new Date(0),
-  });
+  clearAuthCookie(res, req);
 
   return res.status(200).json({ message: "Logged out" });
 };

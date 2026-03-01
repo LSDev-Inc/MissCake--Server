@@ -4,6 +4,28 @@ const Product = require("../models/Product");
 const Order = require("../models/Order");
 const { logActivity } = require("../utils/activityLogger");
 
+const normalizeOrigin = (value) => String(value || "").trim().replace(/\/+$/, "");
+const parseOrigins = (value) =>
+  String(value || "")
+    .split(",")
+    .map(normalizeOrigin)
+    .filter(Boolean);
+
+const resolveClientBaseUrl = (req) => {
+  const requestOrigin = normalizeOrigin(req.get("origin"));
+  if (requestOrigin) {
+    return requestOrigin;
+  }
+
+  const configuredOrigins = [process.env.CLIENT_URL, ...parseOrigins(process.env.CLIENT_URLS)].filter(Boolean);
+  if (configuredOrigins.length > 0) {
+    return normalizeOrigin(configuredOrigins[0]);
+  }
+
+  const fallbackClientPort = process.env.CLIENT_PORT || "5173";
+  return `http://localhost:${fallbackClientPort}`;
+};
+
 const createCheckoutSession = async (req, res, next) => {
   try {
     if (!process.env.STRIPE_SECRET_KEY) {
@@ -71,7 +93,7 @@ const createCheckoutSession = async (req, res, next) => {
       adminComment: "",
     });
 
-    const clientBaseUrl = process.env.CLIENT_URL || "http://localhost:5173";
+    const clientBaseUrl = resolveClientBaseUrl(req);
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       payment_method_types: ["card"],
@@ -129,8 +151,9 @@ const updateOrderForStaff = async (req, res, next) => {
       throw new Error("Invalid order id");
     }
 
-    const allowedStatuses = ["In attesa", "In preparazione", "Completato"];
-    if (!status || !allowedStatuses.includes(status)) {
+    const normalizedStatus = status === "Completato" ? "Concluso" : status;
+    const allowedStatuses = ["In attesa", "In preparazione", "Completato", "Concluso"];
+    if (!normalizedStatus || !allowedStatuses.includes(normalizedStatus)) {
       res.status(400);
       throw new Error("Invalid status");
     }
@@ -141,7 +164,7 @@ const updateOrderForStaff = async (req, res, next) => {
       throw new Error("Order not found");
     }
 
-    order.status = status;
+    order.status = normalizedStatus;
     order.remainingTime = String(remainingTime || "").trim();
     order.adminComment = String(adminComment || "").trim();
     await order.save();

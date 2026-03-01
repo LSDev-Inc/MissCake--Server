@@ -25,7 +25,7 @@ const protect = async (req, res, next) => {
 
     if (secondsToExpire > 0 && secondsToExpire <= refreshWindowSeconds) {
       const renewedToken = generateToken(user._id, user.role);
-      setAuthCookie(res, renewedToken);
+      setAuthCookie(res, renewedToken, req);
     }
 
     return next();

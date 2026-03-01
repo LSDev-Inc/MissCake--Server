@@ -33,7 +33,7 @@ const orderSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["In attesa", "In preparazione", "Completato"],
+      enum: ["In attesa", "In preparazione", "Completato", "Concluso"],
       default: "In attesa",
     },
     remainingTime: {

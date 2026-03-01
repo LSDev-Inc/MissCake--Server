@@ -15,13 +15,26 @@ const uploadRoutes = require("./routes/uploadRoutes");
 const app = express();
 const isProd = process.env.NODE_ENV === "production";
 
-const normalizeOrigin = (origin) => String(origin || "").trim().replace(/\/$/, "");
+const normalizeOrigin = (origin) => String(origin || "").trim().replace(/\/+$/, "");
+const parseOrigins = (value) =>
+  String(value || "")
+    .split(",")
+    .map(normalizeOrigin)
+    .filter(Boolean);
+
+const localFrontendOrigins = [
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
+  "http://localhost:4173",
+  "http://127.0.0.1:4173",
+];
 
 const allowedOrigins = new Set(
   [
     "https://miss-cake.vercel.app",
-    ...(isProd ? [] : ["http://localhost:5173"]),
+    ...localFrontendOrigins,
     process.env.CLIENT_URL,
+    ...parseOrigins(process.env.CLIENT_URLS),
   ]
     .filter(Boolean)
     .map(normalizeOrigin)
