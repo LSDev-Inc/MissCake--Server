@@ -151,9 +151,8 @@ const updateOrderForStaff = async (req, res, next) => {
       throw new Error("Invalid order id");
     }
 
-    const normalizedStatus = status === "Completato" ? "Concluso" : status;
     const allowedStatuses = ["In attesa", "In preparazione", "Completato", "Concluso"];
-    if (!normalizedStatus || !allowedStatuses.includes(normalizedStatus)) {
+    if (!status || !allowedStatuses.includes(status)) {
       res.status(400);
       throw new Error("Invalid status");
     }
@@ -164,7 +163,7 @@ const updateOrderForStaff = async (req, res, next) => {
       throw new Error("Order not found");
     }
 
-    order.status = normalizedStatus;
+    order.status = status;
     order.remainingTime = String(remainingTime || "").trim();
     order.adminComment = String(adminComment || "").trim();
     await order.save();

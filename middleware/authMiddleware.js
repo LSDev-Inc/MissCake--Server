@@ -2,8 +2,19 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const { generateToken, setAuthCookie } = require("../utils/generateToken");
 
+const readBearerToken = (req) => {
+  const header = String(req.headers?.authorization || "").trim();
+  if (!header.toLowerCase().startsWith("bearer ")) {
+    return "";
+  }
+
+  return header.slice(7).trim();
+};
+
 const protect = async (req, res, next) => {
-  const token = req.cookies?.token;
+  const cookieToken = req.cookies?.token;
+  const bearerToken = readBearerToken(req);
+  const token = bearerToken || cookieToken;
 
   if (!token) {
     return res.status(401).json({ message: "Not authorized: no token" });
@@ -23,7 +34,7 @@ const protect = async (req, res, next) => {
     const refreshWindowSeconds = Number(process.env.JWT_REFRESH_WINDOW_SECONDS || 24 * 60 * 60);
     const secondsToExpire = Number(decoded.exp || 0) - nowInSeconds;
 
-    if (secondsToExpire > 0 && secondsToExpire <= refreshWindowSeconds) {
+    if (!bearerToken && secondsToExpire > 0 && secondsToExpire <= refreshWindowSeconds) {
       const renewedToken = generateToken(user._id, user.role);
       setAuthCookie(res, renewedToken, req);
     }
